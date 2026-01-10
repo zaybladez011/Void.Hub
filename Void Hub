@@ -1,0 +1,185 @@
+-- VoidZo
+-- VoidUI LocalScript: Fully modular, supports ScrollingFrame & all Roblox UI elements
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+local UIObjects = {} -- Stores Window/Tab/Section/Button/Other
+
+local function createGUI()
+    -- Remove old GUI
+    if CoreGui:FindFirstChild("VoidHubUI") then
+        CoreGui.VoidHubUI:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "VoidHubUI"
+    ScreenGui.Parent = CoreGui
+    ScreenGui.ResetOnSpawn = false
+
+    -- =========================
+    -- Mid-Center Panel (invisible by default)
+    -- =========================
+    local Panel = Instance.new("Frame")
+    Panel.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    Panel.BorderSizePixel = 0
+    Panel.Visible = false
+    Panel.Active = true
+    Panel.Selectable = true
+    Panel.Parent = ScreenGui
+
+    local Inner = Instance.new("ScrollingFrame")
+    Inner.Size = UDim2.new(1, -20, 1, -20)
+    Inner.Position = UDim2.new(0,10,0,10)
+    Inner.BackgroundColor3 = Color3.fromRGB(196,196,196)
+    Inner.BorderSizePixel = 0
+    Inner.CanvasSize = UDim2.new(0,0,0,0)
+    Inner.ScrollBarThickness = 6
+    Inner.Parent = Panel
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = Inner
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0,5)
+
+    -- Update panel size & position
+    local function updatePanel()
+        local screenSize = workspace.CurrentCamera.ViewportSize
+        local size = math.min(screenSize.X, screenSize.Y) * 0.8
+        Panel.Size = UDim2.new(0, size, 0, size)
+        Panel.Position = UDim2.new(0.5, -size/2, 0.5, -size/2)
+    end
+    updatePanel()
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updatePanel)
+
+    -- =========================
+    -- Toggle Button (invisible by default)
+    -- =========================
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 120, 0, 40)
+    ToggleBtn.Position = UDim2.new(0, 10, 0.5, -20)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Text = "Void Hub"
+    ToggleBtn.TextColor3 = Color3.fromRGB(200,200,200)
+    ToggleBtn.TextSize = 14
+    ToggleBtn.AutoButtonColor = false
+    ToggleBtn.Visible = false
+    ToggleBtn.Parent = ScreenGui
+    local UICorner = Instance.new("UICorner", ToggleBtn)
+    UICorner.CornerRadius = UDim.new(0,8)
+
+    -- Drag-safe toggle
+    local dragging = false
+    local dragStart, dragPos, dragInput
+    local dragThreshold = 5
+    local totalDelta = Vector2.new(0,0)
+
+    ToggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            dragPos = ToggleBtn.Position
+            totalDelta = Vector2.new(0,0)
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    if math.abs(totalDelta.X) < dragThreshold and math.abs(totalDelta.Y) < dragThreshold then
+                        if #Inner:GetChildren() > 0 then
+                            Panel.Visible = not Panel.Visible
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    ToggleBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            totalDelta = delta
+            ToggleBtn.Position = UDim2.new(
+                dragPos.X.Scale, dragPos.X.Offset + delta.X,
+                dragPos.Y.Scale, dragPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    -- =========================
+    -- Modular UI system
+    -- =========================
+    local UI = {}
+
+    function UI:Window(title)
+        local window = {Name=title, Tabs={}}
+
+        function window:Tab(name)
+            local tab = {Name=name, Sections={}}
+
+            function tab:Section(name)
+                local section = {Name=name, Buttons={}}
+
+                -- Add any Roblox UI object in the section
+                function section:AddObject(obj)
+                    obj.Parent = Inner
+                    Panel.Visible = true
+                    ToggleBtn.Visible = true
+                end
+
+                -- Add button
+                function section:Button(text, callback)
+                    local btn = Instance.new("TextButton")
+                    btn.Size = UDim2.new(0, 120, 0, 30)
+                    btn.Text = text
+                    btn.TextColor3 = Color3.fromRGB(255,255,255)
+                    btn.TextSize = 14
+                    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+                    btn.BorderSizePixel = 0
+                    local uc = Instance.new("UICorner", btn)
+                    uc.CornerRadius = UDim.new(0,4)
+                    btn.Parent = Inner
+                    btn.MouseButton1Click:Connect(callback)
+                    table.insert(section.Buttons, btn)
+
+                    Panel.Visible = true
+                    ToggleBtn.Visible = true
+                end
+
+                tab.Sections[name] = section
+                return section
+            end
+
+            window.Tabs[name] = tab
+            return tab
+        end
+
+        return window
+    end
+
+    UIObjects = UI
+    return UI
+end
+
+-- Initialize GUI
+local VoidUI = createGUI()
+
+-- Example: add button
+-- local main = VoidUI:Window("Main Window")
+-- local tab = main:Tab("Tab 1")
+-- local sec = tab:Section("Section 1")
+-- sec:Button("Click Me", function() print("Clicked") end)
+
+-- Respawn handling
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    VoidUI = createGUI()
+end)
