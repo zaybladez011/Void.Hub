@@ -1,0 +1,134 @@
+-- [[ VOIDARE HUB - UI LIBRARY CORE ]]
+local Library = {}
+
+local CoreGui = game:GetService("CoreGui")
+local ScreenGui = Instance.new("ScreenGui")
+
+-- Persistent settings
+ScreenGui.Name = "VoidareHub_Core"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false 
+
+-- [[ MAIN WINDOW (500x200) ]]
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -100)
+MainFrame.Size = UDim2.new(0, 500, 0, 200)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true 
+Instance.new("UICorner", MainFrame)
+
+-- [[ TOP MID TOGGLE ]]
+local ToggleUI = Instance.new("TextButton")
+ToggleUI.Parent = ScreenGui
+ToggleUI.Position = UDim2.new(0.5, -50, 0.02, 0) 
+ToggleUI.Size = UDim2.new(0, 100, 0, 25)
+ToggleUI.BackgroundColor3 = Color3.fromRGB(45, 0, 110)
+ToggleUI.Text = "Voidare Hub"
+ToggleUI.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleUI.Font = Enum.Font.GothamBold
+ToggleUI.TextSize = 11
+Instance.new("UICorner", ToggleUI).CornerRadius = UDim.new(0, 6)
+
+ToggleUI.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- [[ TITLE BAR ]]
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(45, 0, 110)
+TitleBar.Parent = MainFrame
+Instance.new("UICorner", TitleBar)
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(1, -40, 1, 0)
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "VOIDARE HUB"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 14
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Parent = TitleBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TitleBar
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+
+-- [[ LEFT SIDE: SECTIONS ]]
+local SectionBar = Instance.new("ScrollingFrame")
+SectionBar.Name = "SectionBar"
+SectionBar.Size = UDim2.new(0, 140, 1, -40)
+SectionBar.Position = UDim2.new(0, 5, 0, 35)
+SectionBar.BackgroundTransparency = 1
+SectionBar.ScrollBarThickness = 2
+SectionBar.Parent = MainFrame
+Instance.new("UIListLayout", SectionBar).Padding = UDim.new(0, 5)
+
+-- [[ RIGHT SIDE: TABS ]]
+local TabArea = Instance.new("Frame")
+TabArea.Name = "TabArea"
+TabArea.Size = UDim2.new(1, -155, 1, -40)
+TabArea.Position = UDim2.new(0, 150, 0, 35)
+TabArea.BackgroundTransparency = 1
+TabArea.Parent = MainFrame
+
+local TabTitle = Instance.new("TextLabel")
+TabTitle.Size = UDim2.new(1, 0, 0, 25)
+TabTitle.BackgroundTransparency = 1
+TabTitle.Text = "- Select Section -"
+TabTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+TabTitle.Font = Enum.Font.GothamBold
+TabTitle.TextSize = 12
+TabTitle.Parent = TabArea
+
+local TabScroller = Instance.new("ScrollingFrame")
+TabScroller.Size = UDim2.new(1, 0, 1, -30)
+TabScroller.Position = UDim2.new(0, 0, 0, 30)
+TabScroller.BackgroundTransparency = 1
+TabScroller.ScrollBarThickness = 2
+TabScroller.Parent = TabArea
+Instance.new("UIListLayout", TabScroller).Padding = UDim.new(0, 5)
+
+-- [[ ENGINE ]]
+function Library:Create(sectionName, tabData)
+    local SecBtn = Instance.new("TextButton")
+    SecBtn.Size = UDim2.new(1, -5, 0, 35)
+    SecBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SecBtn.Text = sectionName
+    SecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SecBtn.Font = Enum.Font.GothamBold
+    SecBtn.Parent = SectionBar
+    Instance.new("UICorner", SecBtn)
+    
+    SecBtn.MouseButton1Click:Connect(function()
+        for _, v in pairs(TabScroller:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        TabTitle.Text = "- " .. sectionName .. " -"
+        TabScroller.CanvasSize = UDim2.new(0, 0, 0, #tabData * 40)
+        
+        for _, tab in pairs(tabData) do
+            local t = Instance.new("TextButton")
+            t.Size = UDim2.new(1, -10, 0, 35)
+            t.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            t.Text = tab.Text
+            t.TextColor3 = Color3.fromRGB(255, 255, 255)
+            t.Font = Enum.Font.Gotham
+            t.Parent = TabScroller
+            Instance.new("UICorner", t)
+            t.MouseButton1Click:Connect(tab.Callback)
+        end
+    end)
+end
+
+return Library
