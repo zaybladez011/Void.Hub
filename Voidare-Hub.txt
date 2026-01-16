@@ -1,29 +1,179 @@
--- [[ VOIDARE HUB - UI LIBRARY CORE ]]
+-- [[ VOIDARE HUB - THEME ZINDEX FIX ]]
 local Library = {}
 
 local CoreGui = game:GetService("CoreGui")
 local ScreenGui = Instance.new("ScreenGui")
-
--- Persistent settings
 ScreenGui.Name = "VoidareHub_Core"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false 
 
--- [[ MAIN WINDOW (500x200) ]]
+-- [[ MAIN WINDOW ]]
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -100)
+local OriginalPos = UDim2.new(0.5, -250, 0.5, -100)
+MainFrame.Position = OriginalPos
 MainFrame.Size = UDim2.new(0, 500, 0, 200)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = true 
+MainFrame.Visible = false 
 Instance.new("UICorner", MainFrame)
 
--- [[ TOP MID TOGGLE ]]
+local function ResetPos()
+    MainFrame.Position = OriginalPos
+end
+
+-- [[ TOGGLE BUTTON ]]
 local ToggleUI = Instance.new("TextButton")
+ToggleUI.Parent = ScreenGui
+ToggleUI.Position = UDim2.new(0.5, -50, 0.02, 0) 
+ToggleUI.Size = UDim2.new(0, 100, 0, 25)
+ToggleUI.BackgroundColor3 = Color3.fromRGB(45, 0, 110)
+ToggleUI.Text = "Voidare Hub"
+ToggleUI.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleUI.Font = Enum.Font.GothamBold
+ToggleUI.TextSize = 11
+Instance.new("UICorner", ToggleUI).CornerRadius = UDim.new(0, 6)
+
+ToggleUI.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    if not MainFrame.Visible then ResetPos() end
+end)
+
+-- [[ TITLE BAR ]]
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(45, 0, 110)
+TitleBar.Parent = MainFrame
+Instance.new("UICorner", TitleBar)
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(1, -70, 1, 0)
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "VOIDARE HUB"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Parent = TitleBar
+
+-- [[ CLOSE & THEME BUTTONS ]]
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TitleBar
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; ResetPos() end)
+
+local ThemeBtn = Instance.new("TextButton")
+ThemeBtn.Size = UDim2.new(0, 30, 0, 30)
+ThemeBtn.Position = UDim2.new(1, -60, 0, 0)
+ThemeBtn.BackgroundTransparency = 1
+ThemeBtn.Text = "🎨"
+ThemeBtn.Parent = TitleBar
+
+-- [[ THEME SELECTION FRAME (FIXED ZINDEX) ]]
+local ThemeFrame = Instance.new("Frame")
+ThemeFrame.Name = "ThemeFrame"
+ThemeFrame.Size = UDim2.new(0, 100, 0, 105)
+ThemeFrame.Position = UDim2.new(1, -110, 0, 35)
+ThemeFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ThemeFrame.Visible = false
+ThemeFrame.ZIndex = 10 -- BRINGS IT TO THE FRONT
+ThemeFrame.Parent = MainFrame
+Instance.new("UICorner", ThemeFrame)
+
+local tl = Instance.new("UIListLayout", ThemeFrame)
+tl.Padding = UDim.new(0, 5)
+tl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function CreateThemeBtn(name, bgColor, txtColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 90, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.ZIndex = 11 -- ENSURES BUTTONS ARE CLICKABLE ABOVE SCROLLFRAME
+    btn.Parent = ThemeFrame
+    Instance.new("UICorner", btn)
+    
+    btn.MouseButton1Click:Connect(function()
+        MainFrame.BackgroundColor3 = bgColor
+        TitleText.TextColor3 = txtColor
+        ThemeFrame.Visible = false
+    end)
+end
+
+CreateThemeBtn("Void", Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255))
+CreateThemeBtn("Light", Color3.fromRGB(240, 240, 240), Color3.fromRGB(0, 0, 0))
+CreateThemeBtn("Gray", Color3.fromRGB(50, 50, 50), Color3.fromRGB(255, 255, 255))
+
+ThemeBtn.MouseButton1Click:Connect(function() ThemeFrame.Visible = not ThemeFrame.Visible end)
+
+-- [[ SEPARATOR LINE ]]
+local Separator = Instance.new("Frame")
+Separator.Position = UDim2.new(0, 145, 0, 35)
+Separator.Size = UDim2.new(0, 2, 1, -45)
+Separator.BackgroundColor3 = Color3.fromRGB(45, 0, 110)
+Separator.BorderSizePixel = 0
+Separator.ZIndex = 2
+Separator.Parent = MainFrame
+
+-- [[ LEFT SIDE: SECTIONS ]]
+local SectionBar = Instance.new("ScrollingFrame")
+SectionBar.Size = UDim2.new(0, 140, 1, -40)
+SectionBar.Position = UDim2.new(0, 5, 0, 35)
+SectionBar.BackgroundTransparency = 1
+SectionBar.ScrollBarThickness = 2
+SectionBar.ZIndex = 2
+SectionBar.Parent = MainFrame
+Instance.new("UIListLayout", SectionBar).Padding = UDim.new(0, 5)
+
+-- [[ RIGHT SIDE: TABS ]]
+local TabScroller = Instance.new("ScrollingFrame")
+TabScroller.Size = UDim2.new(1, -155, 1, -40)
+TabScroller.Position = UDim2.new(0, 150, 0, 35)
+TabScroller.BackgroundTransparency = 1
+TabScroller.ScrollBarThickness = 2
+TabScroller.ZIndex = 2 -- LOWER THAN THEME FRAME
+TabScroller.Parent = MainFrame
+Instance.new("UIListLayout", TabScroller).Padding = UDim.new(0, 5)
+
+-- [[ ENGINE ]]
+function Library:Create(sectionName, tabData)
+    local SecBtn = Instance.new("TextButton")
+    SecBtn.Size = UDim2.new(1, -5, 0, 35)
+    SecBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SecBtn.Text = sectionName
+    SecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SecBtn.Font = Enum.Font.GothamBold
+    SecBtn.ZIndex = 3
+    SecBtn.Parent = SectionBar
+    Instance.new("UICorner", SecBtn)
+    
+    SecBtn.MouseButton1Click:Connect(function()
+        for _, v in pairs(TabScroller:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        for _, tab in pairs(tabData) do
+            local t = Instance.new("TextButton")
+            t.Size = UDim2.new(1, -10, 0, 35)
+            t.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            t.Text = tab.Text
+            t.TextColor3 = Color3.fromRGB(255, 255, 255)
+            t.Font = Enum.Font.Gotham
+            t.ZIndex = 3
+            t.Parent = TabScroller
+            Instance.new("UICorner", t)
+            t.MouseButton1Click:Connect(tab.Callback)
+        end
+    end)
+end
+
+return Library
 ToggleUI.Parent = ScreenGui
 ToggleUI.Position = UDim2.new(0.5, -50, 0.02, 0) 
 ToggleUI.Size = UDim2.new(0, 100, 0, 25)
